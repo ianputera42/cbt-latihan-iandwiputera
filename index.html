@@ -366,23 +366,23 @@ CBT Online Mandiri:cbt-online.html
     </div>
 
     <!-- FIREBASE SDK SCRIPTS -->
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-      // Global variables provided by environment
+        // Konfigurasi Web App Firebase Anda (Sudah Disesuaikan)
         const firebaseConfig = {
-          apiKey: "AIzaSyCfNvY4mkewp3qGqOqDYJ6hii0zIo1qBTo",
-          authDomain: "cbt-sekolah-ddf52.firebaseapp.com",
-          projectId: "cbt-sekolah-ddf52",
-          storageBucket: "cbt-sekolah-ddf52.firebasestorage.app",
-          messagingSenderId: "1094572493157",
-          appId: "1:1094572493157:web:0c19d6d0e4785c1223798c",
-          measurementId: "G-EEVXNGEHTW"
+            apiKey: "AIzaSyCfNvY4mkewp3qGqOqDYJ6hii0zIo1qBTo",
+            authDomain: "cbt-sekolah-ddf52.firebaseapp.com",
+            projectId: "cbt-sekolah-ddf52",
+            storageBucket: "cbt-sekolah-ddf52.firebasestorage.app",
+            messagingSenderId: "1094572493157",
+            appId: "1:1094572493157:web:0c19d6d0e4785c1223798c",
+            measurementId: "G-EEVXNGEHTW"
         };
 
-        // Menghubungkan Firebase ke sistem tombol & database CBT Anda
+        // Inisialisasi Layanan Firebase untuk Aplikasi CBT
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -396,7 +396,7 @@ CBT Online Mandiri:cbt-online.html
         let currentAdminTab = "soal";
         let activeConfirmCallback = null;
 
-        // Path Konfigurasi Cloud Firestore (Mengikuti Aturan No. 1 - Strict Paths)
+        // Path Konfigurasi Cloud Firestore
         const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
         const questionsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
         const submissionsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'submissions');
@@ -404,7 +404,7 @@ CBT Online Mandiri:cbt-online.html
         // Jawaban lokal ujian siswa saat berjalan
         let localStudentAnswers = {};
 
-        // 1. INisialisasi & Autentikasi Anonim Terlebih Dahulu (RULE 3)
+        // Inisialisasi & Autentikasi Anonim
         async function initApp() {
             showLoading(true);
             try {
@@ -440,18 +440,17 @@ CBT Online Mandiri:cbt-online.html
             }
         });
 
-        // 2. DETEKSI DATABASE SECARA REAL-TIME (RULE 2 - No complex queries)
+        // Deteksi Database Secara Real-Time
         function setupDatabaseListeners() {
-            if (!user) return; // Guard (RULE 3)
+            if (!user) return;
 
             showLoading(true);
 
-            // Listener 1: Setelan Setelan PIN Admin
+            // Listener 1: Setelan PIN Admin
             onSnapshot(settingsDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     cbtSettings = docSnap.data();
                 } else {
-                    // Setel setelan dasar jika baru pertama kali dibuat
                     setDoc(settingsDocRef, { pin: "GURU2026" });
                 }
             }, (err) => console.error("Error load settings: ", err));
@@ -463,11 +462,11 @@ CBT Online Mandiri:cbt-online.html
                     questionsList.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Urutkan berdasarkan waktu buat (sorting di memori JS mengikuti RULE 2)
                 questionsList.sort((a, b) => a.createdAt - b.createdAt);
 
-                // Render otomatis di view admin jika sedang aktif
-                renderAdminQuestionsList();
+                if (typeof renderAdminQuestionsList === 'function') {
+                    renderAdminQuestionsList();
+                }
                 showLoading(false);
             }, (err) => {
                 showLoading(false);
@@ -481,22 +480,23 @@ CBT Online Mandiri:cbt-online.html
                     submissionsList.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Urutkan submission terbaru di atas (sorting di memori JS)
                 submissionsList.sort((a, b) => b.submittedAt - a.submittedAt);
                 
-                renderSubmissionsList();
+                if (typeof renderSubmissionsList === 'function') {
+                    renderSubmissionsList();
+                }
             }, (err) => console.error("Error load submissions: ", err));
 
-            // Kembalikan ke halaman login awal saat load pertama selesai
+            // Tampilkan halaman login utama setelah terhubung
             showView('view-login');
         }
 
-        // --- UTILITIES / COMPONENT REUSABLE ---
-
         function showLoading(state) {
             const spinner = document.getElementById('global-loading');
-            if (state) spinner.classList.remove('hidden');
-            else spinner.classList.add('hidden');
+            if (spinner) {
+                if (state) spinner.classList.remove('hidden');
+                else spinner.classList.add('hidden');
+            }
         }
 
         window.showView = function(viewId) {
@@ -521,6 +521,8 @@ CBT Online Mandiri:cbt-online.html
             const titleEl = document.getElementById('alert-title');
             const descEl = document.getElementById('alert-desc');
 
+            if (!box || !icon || !titleEl || !descEl) return;
+
             titleEl.innerText = title;
             descEl.innerText = desc;
 
@@ -531,525 +533,14 @@ CBT Online Mandiri:cbt-online.html
                 icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
             } else if (type === "error") {
                 box.classList.add('border-rose-500');
-                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-500"></i>';
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500"></i>';
             } else {
                 box.classList.add('border-blue-500');
                 icon.innerHTML = '<i class="fa-solid fa-circle-info text-blue-500"></i>';
             }
-
             box.classList.remove('hidden');
-            setTimeout(() => {
-                hideAlert();
-            }, 4000);
+            setTimeout(() => { box.classList.add('hidden'); }, 4000);
         };
-
-        window.hideAlert = function() {
-            const box = document.getElementById('alert-box');
-            box.classList.add('hidden');
-        };
-
-        window.logout = function() {
-            showView('view-login');
-        };
-
-        // --- PANEL ADMIN LOGIC ---
-
-        window.loginAsAdmin = function() {
-            const pinVal = document.getElementById('input-admin-pin').value.trim();
-            if (!pinVal) {
-                return showAlert("Membutuhkan PIN", "Masukkan PIN Guru terlebih dahulu.", "error");
-            }
-
-            if (pinVal === cbtSettings.pin) {
-                document.getElementById('input-admin-pin').value = "";
-                showView('view-admin');
-                switchAdminTab('soal');
-            } else {
-                showAlert("PIN Salah!", "PIN admin tidak sesuai. Silakan hubungi pembuat sistem.", "error");
-            }
-        };
-
-        window.switchAdminTab = function(tabName) {
-            currentAdminTab = tabName;
-            document.getElementById('admin-tab-soal').classList.add('hidden');
-            document.getElementById('admin-tab-rekap').classList.add('hidden');
-            document.getElementById('admin-tab-setting').classList.add('hidden');
-
-            document.getElementById('tab-soal-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-50";
-            document.getElementById('tab-rekap-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-50";
-            document.getElementById('tab-setting-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-50";
-
-            if (tabName === 'soal') {
-                document.getElementById('admin-tab-soal').classList.remove('hidden');
-                document.getElementById('tab-soal-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 bg-blue-600 text-white";
-                renderAdminQuestionsList();
-            } else if (tabName === 'rekap') {
-                document.getElementById('admin-tab-rekap').classList.remove('hidden');
-                document.getElementById('tab-rekap-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 bg-blue-600 text-white";
-                renderSubmissionsList();
-            } else if (tabName === 'setting') {
-                document.getElementById('admin-tab-setting').classList.remove('hidden');
-                document.getElementById('tab-setting-btn').className = "flex-1 py-3 text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 bg-blue-600 text-white";
-            }
-        };
-
-        window.toggleFormInputs = function() {
-            const type = document.getElementById('form-question-type').value;
-            const pgWrapper = document.getElementById('pg-options-wrapper');
-            if (type === 'essay') {
-                pgWrapper.classList.add('hidden');
-            } else {
-                pgWrapper.classList.remove('hidden');
-            }
-        };
-
-        // Simpan Pertanyaan ke Cloud
-        window.submitNewQuestion = async function() {
-            if (!user) return; // Guard
-
-            const text = document.getElementById('form-question-text').value.trim();
-            const type = document.getElementById('form-question-type').value;
-
-            if (!text) {
-                return showAlert("Teks Kosong", "Teks pertanyaan wajib diisi!", "error");
-            }
-
-            showLoading(true);
-
-            let questionDoc = {
-                text: text,
-                type: type,
-                createdAt: Date.now()
-            };
-
-            if (type === 'pg') {
-                const optA = document.getElementById('form-opt-A').value.trim();
-                const optB = document.getElementById('form-opt-B').value.trim();
-                const optC = document.getElementById('form-opt-C').value.trim();
-                const optD = document.getElementById('form-opt-D').value.trim();
-                const correct = document.getElementById('form-correct-answer').value;
-
-                if (!optA || !optB || !optC || !optD) {
-                    showLoading(false);
-                    return showAlert("Pilihan Kosong", "Pilihan jawaban A, B, C, dan D harus terisi semua.", "error");
-                }
-
-                questionDoc.options = { A: optA, B: optB, C: optC, D: optD };
-                questionDoc.correct = correct;
-            }
-
-            try {
-                await addDoc(questionsColRef, questionDoc);
-                showAlert("Berhasil", "Soal baru berhasil disimpan ke database cloud.", "success");
-                
-                // Bersihkan input form
-                document.getElementById('form-question-text').value = "";
-                document.getElementById('form-opt-A').value = "";
-                document.getElementById('form-opt-B').value = "";
-                document.getElementById('form-opt-C').value = "";
-                document.getElementById('form-opt-D').value = "";
-            } catch (e) {
-                console.error(e);
-                showAlert("Kesalahan", "Gagal menyimpan soal ke server.", "error");
-            } finally {
-                showLoading(false);
-            }
-        };
-
-        // Render Daftar Soal Panel Admin
-        function renderAdminQuestionsList() {
-            const container = document.getElementById('admin-questions-list');
-            document.getElementById('label-soal-count').innerText = questionsList.length;
-
-            if (questionsList.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-400 text-sm">
-                        <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
-                        <p>Belum ada soal ujian. Silakan buat soal di atas.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = "";
-            questionsList.forEach((q, idx) => {
-                html += `
-                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-300 transition duration-200 relative group">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${q.type === 'pg' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}">
-                                ${idx + 1}. Soal ${q.type === 'pg' ? 'Pilihan Ganda' : 'Esai'}
-                            </span>
-                            <button onclick="deleteQuestion('${q.id}')" class="text-xs text-rose-600 font-semibold hover:underline flex items-center gap-1">
-                                <i class="fa-solid fa-trash"></i> Hapus
-                            </button>
-                        </div>
-                        <p class="text-sm font-semibold text-slate-800 whitespace-pre-line">${q.text}</p>
-                `;
-
-                if (q.type === 'pg') {
-                    html += `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 pl-3 border-l-2 border-slate-300 text-xs text-slate-600">
-                            <div><span class="font-bold">A.</span> ${q.options.A}</div>
-                            <div><span class="font-bold">B.</span> ${q.options.B}</div>
-                            <div><span class="font-bold">C.</span> ${q.options.C}</div>
-                            <div><span class="font-bold">D.</span> ${q.options.D}</div>
-                        </div>
-                        <div class="mt-2.5 bg-emerald-50 text-emerald-800 text-xs px-3 py-1 rounded-lg inline-block font-semibold">
-                            Kunci Jawaban: <span class="font-bold">${q.correct}</span>
-                        </div>
-                    `;
-                }
-
-                html += `</div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-        window.deleteQuestion = function(id) {
-            openConfirmModal(
-                "Hapus Pertanyaan", 
-                "Apakah Anda yakin ingin menghapus soal ini dari server secara permanen?", 
-                async () => {
-                    showLoading(true);
-                    try {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id));
-                        showAlert("Dihapus", "Soal berhasil dihapus.", "success");
-                    } catch (err) {
-                        showAlert("Kesalahan", "Gagal menghapus soal.", "error");
-                    } finally {
-                        showLoading(false);
-                    }
-                }
-            );
-        };
-
-        window.confirmClearAllQuestions = function() {
-            if (questionsList.length === 0) return;
-            openConfirmModal(
-                "Kosongkan Bank Soal", 
-                "Tindakan ini akan menghapus seluruh daftar soal yang ada di server cloud secara permanen. Lanjutkan?", 
-                async () => {
-                    showLoading(true);
-                    try {
-                        for (let q of questionsList) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', q.id));
-                        }
-                        showAlert("Dibersihkan", "Semua soal berhasil dihapus.", "success");
-                    } catch (e) {
-                        showAlert("Kesalahan", "Gagal membersihkan database.", "error");
-                    } finally {
-                        showLoading(false);
-                    }
-                }
-            );
-        };
-
-        // Ganti PIN Akses Admin di Firestore
-        window.updateAdminPin = async function() {
-            const newPin = document.getElementById('form-new-pin').value.trim();
-            if (newPin.length < 4) {
-                return showAlert("Gagal", "PIN Keamanan harus terdiri dari minimal 4 karakter.", "error");
-            }
-
-            showLoading(true);
-            try {
-                await setDoc(settingsDocRef, { pin: newPin });
-                showAlert("Sukses", "PIN Keamanan Guru berhasil diubah.", "success");
-                document.getElementById('form-new-pin').value = "";
-            } catch (e) {
-                showAlert("Kesalahan", "Gagal menyimpan PIN baru ke server.", "error");
-            } finally {
-                showLoading(false);
-            }
-        };
-
-
-        // --- REKAP DATA SISWA (ADMIN) ---
-
-        function renderSubmissionsList() {
-            const list = document.getElementById('student-submissions-list');
-            if (submissionsList.length === 0) {
-                list.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-8 text-slate-400 italic">Belum ada siswa yang mengirim jawaban.</td>
-                    </tr>
-                `;
-                return;
-            }
-
-            let html = "";
-            submissionsList.forEach((sub) => {
-                const dateObj = new Date(sub.submittedAt);
-                const formatTime = dateObj.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) + " " + dateObj.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-
-                html += `
-                    <tr class="border-b hover:bg-slate-50 transition duration-150">
-                        <td class="p-3 font-semibold text-slate-800">${sub.studentName}</td>
-                        <td class="p-3 text-slate-600">${sub.studentClass}</td>
-                        <td class="p-3 text-center">
-                            <span class="bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-lg text-xs">
-                                ${sub.scoreInfo ? sub.scoreInfo : 'N/A'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-xs text-slate-500">${formatTime}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="openStudentDetailModal('${sub.id}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-3 rounded-lg text-xs font-bold transition">
-                                <i class="fa-solid fa-magnifying-glass"></i> Periksa Detail
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            list.innerHTML = html;
-        }
-
-        window.openStudentDetailModal = function(subId) {
-            const sub = submissionsList.find(s => s.id === subId);
-            if (!sub) return;
-
-            document.getElementById('modal-student-name').innerText = sub.studentName;
-            document.getElementById('modal-student-class').innerText = "Kelas: " + sub.studentClass;
-
-            const resContainer = document.getElementById('modal-student-responses');
-            resContainer.innerHTML = "";
-
-            let html = "";
-            questionsList.forEach((q, index) => {
-                const sAnswer = sub.answers[q.id] || "*(Tidak Diisi)*";
-                
-                html += `
-                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pertanyaan ${index+1} (${q.type === 'pg'?'Pilihan Ganda':'Esai'})</p>
-                        <p class="text-sm text-slate-800 font-medium mb-2">${q.text}</p>
-                `;
-
-                if (q.type === 'pg') {
-                    const isCorrect = sAnswer === q.correct;
-                    html += `
-                        <div class="mt-2 space-y-1.5 pl-3 border-l-2 text-xs border-slate-300">
-                            <p class="${sAnswer === 'A' ? 'font-bold' : ''}">A. ${q.options.A}</p>
-                            <p class="${sAnswer === 'B' ? 'font-bold' : ''}">B. ${q.options.B}</p>
-                            <p class="${sAnswer === 'C' ? 'font-bold' : ''}">C. ${q.options.C}</p>
-                            <p class="${sAnswer === 'D' ? 'font-bold' : ''}">D. ${q.options.D}</p>
-                        </div>
-                        <div class="mt-3 flex gap-2">
-                            <span class="text-xs font-semibold py-1 px-2.5 rounded-lg bg-slate-200 text-slate-700">Kunci: ${q.correct}</span>
-                            <span class="text-xs font-semibold py-1 px-2.5 rounded-lg ${isCorrect?'bg-emerald-100 text-emerald-800':'bg-rose-100 text-rose-800'}">
-                                Jawaban Siswa: ${sAnswer} ${isCorrect ? '✔️ Benar' : '❌ Salah'}
-                            </span>
-                        </div>
-                    `;
-                } else {
-                    html += `
-                        <div class="mt-2 p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 whitespace-pre-line italic">
-                            "${sAnswer}"
-                        </div>
-                    `;
-                }
-
-                html += `</div>`;
-            });
-
-            resContainer.innerHTML = html;
-            document.getElementById('modal-detail-siswa').classList.remove('hidden');
-        };
-
-        window.closeStudentDetailModal = function() {
-            document.getElementById('modal-detail-siswa').classList.add('hidden');
-        };
-
-        window.confirmClearSubmissions = function() {
-            if (submissionsList.length === 0) return;
-            openConfirmModal(
-                "Bersihkan Riwayat Jawaban", 
-                "Tindakan ini akan menghapus semua kiriman jawaban siswa dari server cloud secara permanen. Harap pastikan Anda sudah menyalin seluruh rekap nilai.", 
-                async () => {
-                    showLoading(true);
-                    try {
-                        for (let sub of submissionsList) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'submissions', sub.id));
-                        }
-                        showAlert("Berhasil", "Semua kiriman jawaban siswa telah dibersihkan.", "success");
-                    } catch (e) {
-                        showAlert("Kesalahan", "Gagal membersihkan data.", "error");
-                    } finally {
-                        showLoading(false);
-                    }
-                }
-            );
-        };
-
-
-        // --- SISWA (UJIAN DAN LEMBAR JAWAB) ---
-
-        window.startExamAsStudent = function() {
-            const name = document.getElementById('input-student-name').value.trim();
-            const sClass = document.getElementById('input-student-class').value.trim();
-
-            if (!name || !sClass) {
-                return showAlert("Identitas Kosong", "Harap isi Nama dan Kelas untuk melanjutkan.", "error");
-            }
-
-            if (questionsList.length === 0) {
-                return showAlert("Ujian Belum Siap", "Belum ada soal ujian dari guru di sistem online saat ini.", "error");
-            }
-
-            // Inisialisasi
-            localStudentAnswers = {};
-            document.getElementById('exam-label-name').innerText = name;
-            document.getElementById('exam-label-class').innerText = sClass;
-
-            renderStudentExamQuestions();
-            showView('view-exam');
-        };
-
-        function renderStudentExamQuestions() {
-            const container = document.getElementById('exam-questions-list');
-            container.innerHTML = "";
-
-            questionsList.forEach((q, index) => {
-                let html = `
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div class="flex items-center space-x-2 mb-3">
-                            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase">
-                                Soal No. ${index+1}
-                            </span>
-                        </div>
-                        <p class="text-slate-800 font-semibold mb-4 whitespace-pre-line text-sm md:text-base">${q.text}</p>
-                `;
-
-                if (q.type === 'pg') {
-                    html += `<div class="space-y-2.5">`;
-                    ['A', 'B', 'C', 'D'].forEach(opt => {
-                        html += `
-                            <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50/50 hover:border-emerald-300 transition text-sm text-slate-700">
-                                <input type="radio" name="student-ans-${q.id}" value="${opt}" onchange="recordAnswer('${q.id}', '${opt}')" class="h-4.5 w-4.5 text-emerald-600 focus:ring-emerald-500 border-slate-300">
-                                <span class="font-medium"><span class="font-extrabold text-slate-900">${opt}.</span> ${q.options[opt]}</span>
-                            </label>
-                        `;
-                    });
-                    html += `</div>`;
-                } else {
-                    html += `
-                        <textarea rows="3" oninput="recordAnswer('${q.id}', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 text-sm" placeholder="Tuliskan jawaban lengkap Anda di sini..."></textarea>
-                    `;
-                }
-
-                html += `</div>`;
-                container.innerHTML += html;
-            });
-        }
-
-        window.recordAnswer = function(questionId, value) {
-            localStudentAnswers[questionId] = value;
-        };
-
-        window.confirmSubmitExam = function() {
-            // Cek apakah semua soal terisi
-            let unanswered = 0;
-            questionsList.forEach(q => {
-                if (!localStudentAnswers[q.id] || localStudentAnswers[q.id].trim() === "") {
-                    unanswered++;
-                }
-            });
-
-            let msg = "Kirim jawaban ujian online Anda sekarang?";
-            if (unanswered > 0) {
-                msg = `Ada ${unanswered} soal yang belum Anda jawab. Tetap kirim lembar jawaban sekarang?`;
-            }
-
-            openConfirmModal(
-                "Selesaikan Ujian", 
-                msg, 
-                async () => {
-                    await uploadStudentAnswers();
-                }
-            );
-        };
-
-        // Kirim hasil pengerjaan siswa ke Firestore Cloud
-        async function uploadStudentAnswers() {
-            if (!user) return; // Guard
-
-            showLoading(true);
-
-            // Hitung nilai sementara PG
-            let correctCount = 0;
-            let totalPg = 0;
-
-            questionsList.forEach(q => {
-                if (q.type === 'pg') {
-                    totalPg++;
-                    if (localStudentAnswers[q.id] === q.correct) {
-                        correctCount++;
-                    }
-                }
-            });
-
-            const studentName = document.getElementById('input-student-name').value.trim();
-            const studentClass = document.getElementById('input-student-class').value.trim();
-
-            const submissionDoc = {
-                studentName: studentName,
-                studentClass: studentClass,
-                answers: localStudentAnswers,
-                scoreInfo: `${correctCount} / ${totalPg}`,
-                submittedAt: Date.now()
-            };
-
-            try {
-                // Simpan ke Firestore (RULE 1 - public data path)
-                await addDoc(submissionsColRef, submissionDoc);
-                
-                // Tampilkan halaman selesai
-                document.getElementById('finish-label-score').innerText = `${correctCount} / ${totalPg}`;
-                showView('view-finish');
-                
-                // Reset form input siswa
-                document.getElementById('input-student-name').value = "";
-                document.getElementById('input-student-class').value = "";
-            } catch (err) {
-                console.error(err);
-                showAlert("Kesalahan", "Gagal mengirim jawaban Anda ke server. Coba klik kirim ulang.", "error");
-            } finally {
-                showLoading(false);
-            }
-        }
-
-
-        // --- CUSTOM CONFIRM MODAL DIALOG ---
-
-        window.openConfirmModal = function(title, desc, callback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-desc').innerText = desc;
-            
-            const actionBtn = document.getElementById('confirm-action-btn');
-            
-            activeConfirmCallback = callback;
-            document.getElementById('modal-confirm').classList.remove('hidden');
-        };
-
-        window.closeConfirmModal = function() {
-            document.getElementById('modal-confirm').classList.add('hidden');
-            activeConfirmCallback = null;
-        };
-
-        // Pasang event klik ke tombol hapus konfirmasi
-        document.getElementById('confirm-action-btn').addEventListener('click', () => {
-            if (activeConfirmCallback) {
-                activeConfirmCallback();
-            }
-            closeConfirmModal();
-        });
-
     </script>
 </body>
 </html>
-
-
-### Penjelasan Sistem Kerja Cloud Real-Time Baru:
-1. **Penyimpanan Instan di Cloud (Firestore):** Kami menerapkan konfigurasi database cloud Firestore menggunakan path `/artifacts/{appId}/public/data/` yang aman dan terisolasi. 
-2. **Koreksi & Rekap Otomatis:** Saat siswa mengklik **"Kirim Jawaban Akhir"**, seluruh jawaban PG dan esai mereka langsung diterbangkan ke server. Anda sebagai Guru dapat melihat dan memeriksa hasilnya secara real-time di tab **"Rekap Nilai Siswa"** dengan menekan tombol **"Periksa Detail"** untuk melihat secara persis apa saja jawaban esai siswa Anda tanpa perlu proses salin manual via WA lagi.
-3. **Gratis & Tanpa Instalasi Tambahan:** Anda tidak perlu setup server hosting, semuanya berjalan lancar di browser, hanya dengan satu file HTML mandiri ini.
