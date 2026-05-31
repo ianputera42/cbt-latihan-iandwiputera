@@ -372,11 +372,27 @@ CBT Online Mandiri:cbt-online.html
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables provided by environment
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cbt-latihan-online';
+     // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCfNvY4mkewp3qGqOqDYJ6hii0zIo1qBTo",
+  authDomain: "cbt-sekolah-ddf52.firebaseapp.com",
+  projectId: "cbt-sekolah-ddf52",
+  storageBucket: "cbt-sekolah-ddf52.firebasestorage.app",
+  messagingSenderId: "1094572493157",
+  appId: "1:1094572493157:web:0c19d6d0e4785c1223798c",
+  measurementId: "G-EEVXNGEHTW"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
         // State Global Aplikasi
         let user = null;
